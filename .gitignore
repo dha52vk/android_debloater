@@ -33,3 +33,9 @@ bld/
 # Ignore Platform Tools binaries (downloaded by user)
 Assets/platform-tools/*
 !Assets/platform-tools/.gitkeep
+
+# Custom publish output directories
+publish_*/
+
+# Auto-generated zip artifact
+Assets.zip

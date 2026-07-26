@@ -12,7 +12,8 @@ namespace AndroidDebloaterStudio.Services
 
         public async Task<bool> EnsureAdbExistsAsync(Action<string>? logAction)
         {
-            string localAdbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "platform-tools", "adb.exe");
+            string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AndroidDebloaterStudio");
+            string localAdbPath = Path.Combine(appDataPath, "Assets", "platform-tools", "adb.exe");
             if (File.Exists(localAdbPath))
             {
                 _adbPath = localAdbPath;

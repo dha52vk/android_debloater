@@ -9,7 +9,7 @@ namespace AndroidDebloaterStudio.Services
 {
     public class PackageDatabaseService
     {
-        private const string DbFilePath = @"Assets\uad_lists.json";
+        private string DbFilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AndroidDebloaterStudio", "Assets", "uad_lists.json");
         private Dictionary<string, AndroidPackage> _packageDb = new();
 
         public class UadPackageDto
