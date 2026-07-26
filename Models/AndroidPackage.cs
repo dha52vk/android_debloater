@@ -11,6 +11,7 @@ namespace AndroidDebloaterStudio.Models
         private string _oem = "";
         private string _state = "";
         private string _description = "";
+        private string _iconBase64 = "";
         private List<string> _dependencies = new();
         private List<string> _neededBy = new();
         private List<string> _labels = new();
@@ -25,6 +26,12 @@ namespace AndroidDebloaterStudio.Models
         {
             get => _packageName;
             set { _packageName = value; OnPropertyChanged(nameof(PackageName)); }
+        }
+
+        public string IconBase64
+        {
+            get => _iconBase64;
+            set { _iconBase64 = value; OnPropertyChanged(nameof(IconBase64)); }
         }
 
         public string RiskLevel

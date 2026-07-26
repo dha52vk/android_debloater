@@ -12,15 +12,7 @@ namespace AndroidDebloaterStudio.Services
 
         public async Task<bool> EnsureAdbExistsAsync(Action<string>? logAction)
         {
-            string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AndroidDebloaterStudio");
-            string localAdbPath = Path.Combine(appDataPath, "Assets", "platform-tools", "adb.exe");
-            if (File.Exists(localAdbPath))
-            {
-                _adbPath = localAdbPath;
-                return true;
-            }
-
-            // Check if adb is in PATH
+            // Check if adb is in PATH first
             try
             {
                 var processStartInfo = new ProcessStartInfo
@@ -46,7 +38,15 @@ namespace AndroidDebloaterStudio.Services
                 // adb not found in PATH
             }
 
-            logAction?.Invoke("Error: ADB not found. Please download Android SDK Platform-Tools, extract it, and place it in the Assets/platform-tools directory, or add ADB to your system PATH.");
+            string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AndroidDebloaterStudio");
+            string localAdbPath = Path.Combine(appDataPath, "platform-tools", "adb.exe");
+            if (File.Exists(localAdbPath))
+            {
+                _adbPath = localAdbPath;
+                return true;
+            }
+
+            logAction?.Invoke("Error: ADB not found. Please download Android SDK Platform-Tools, extract it, and place it in the platform-tools directory, or add ADB to your system PATH.");
             return false;
         }
 
@@ -177,6 +177,50 @@ namespace AndroidDebloaterStudio.Services
         public async Task<string> RestorePackageAsync(string packageName)
         {
             return await RunAdbCommandAsync($"shell cmd package install-existing --user 0 {packageName}");
+        }
+
+        public async Task<List<AndroidDebloaterStudio.Models.HelperAppInfo>?> GetPackageDetailsWithHelperAsync(Action<string>? logAction = null)
+        {
+            string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AndroidDebloaterStudio");
+            string helperJarPath = Path.Combine(appDataPath, "helper.jar");
+
+            if (!File.Exists(helperJarPath))
+            {
+                logAction?.Invoke("Error: helper.jar not found at " + helperJarPath);
+                return null;
+            }
+
+            logAction?.Invoke("Bắt đầu lấy thông tin icon và tên ứng dụng từ thiết bị...");
+            
+            // Push jar
+            await RunAdbCommandAsync($"push \"{helperJarPath}\" /data/local/tmp/helper.jar");
+            
+            // Run jar
+            string jsonResult = await RunAdbCommandAsync("shell CLASSPATH=/data/local/tmp/helper.jar app_process /system/bin com.dha.applisthelper.Main");
+
+            try
+            {
+                // Ensure output is clean json. ADB sometimes outputs warnings, so find first '[' and last ']'
+                int startIndex = jsonResult.IndexOf('[');
+                int endIndex = jsonResult.LastIndexOf(']');
+                if (startIndex >= 0 && endIndex >= startIndex)
+                {
+                    string cleanJson = jsonResult.Substring(startIndex, endIndex - startIndex + 1);
+                    var result = Newtonsoft.Json.JsonConvert.DeserializeObject<List<AndroidDebloaterStudio.Models.HelperAppInfo>>(cleanJson);
+                    logAction?.Invoke($"Đã lấy thành công dữ liệu app. Size của JSON: {cleanJson.Length} bytes.");
+                    return result;
+                }
+                else
+                {
+                    logAction?.Invoke("Error: No JSON block found in output.");
+                    logAction?.Invoke("Full output:\n" + jsonResult);
+                }
+            }
+            catch (Exception ex)
+            {
+                logAction?.Invoke("Exception parsing JSON: " + ex.Message);
+            }
+            return null;
         }
     }
 }

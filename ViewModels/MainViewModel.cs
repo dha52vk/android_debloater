@@ -81,7 +81,13 @@ namespace AndroidDebloaterStudio.ViewModels
                 ConsoleOutput += $"Device found: {deviceName}. Fetching installed packages...\n";
                 
                 var packageStates = await _adbService.GetPackageStatesAsync();
-                ConsoleOutput += $"Found {packageStates.Count} packages on device.\n";
+                ConsoleOutput += $"Found {packageStates.Count} packages on device. Fetching details...\n";
+
+                var helperDetails = await _adbService.GetPackageDetailsWithHelperAsync(msg => 
+                {
+                    App.Current.Dispatcher.Invoke(() => ConsoleOutput += msg + "\n");
+                });
+                var helperDict = helperDetails?.ToDictionary(x => x.package, x => x);
 
                 App.Current.Dispatcher.Invoke(() =>
                 {
@@ -90,6 +96,19 @@ namespace AndroidDebloaterStudio.ViewModels
                     {
                         var info = _dbService.GetPackageInfo(kvp.Key);
                         info.State = kvp.Value;
+                        
+                        if (helperDict != null && helperDict.TryGetValue(kvp.Key, out var details))
+                        {
+                            if (!string.IsNullOrEmpty(details.name) && details.name != details.package)
+                            {
+                                info.Name = details.name;
+                            }
+                            if (!string.IsNullOrEmpty(details.icon))
+                            {
+                                info.IconBase64 = details.icon;
+                            }
+                        }
+
                         _allPackagesList.Add(info);
                     }
                     ApplyFilters();

@@ -36,6 +36,7 @@ Assets/platform-tools/*
 
 # Custom publish output directories
 publish_*/
+Publish/
 
 # Auto-generated zip artifact
 Assets.zip

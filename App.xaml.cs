@@ -18,9 +18,10 @@ public partial class App : Application
         base.OnStartup(e);
 
         string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AndroidDebloaterStudio");
-        string assetsPath = Path.Combine(appDataPath, "Assets");
+        string helperJarPath = Path.Combine(appDataPath, "helper.jar");
+        string dbPath = Path.Combine(appDataPath, "uad_lists.json");
 
-        if (!Directory.Exists(assetsPath))
+        if (!File.Exists(dbPath) || !File.Exists(helperJarPath))
         {
             Directory.CreateDirectory(appDataPath);
             var assembly = Assembly.GetExecutingAssembly();
